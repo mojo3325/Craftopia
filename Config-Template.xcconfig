@@ -1,0 +1,61 @@
+//
+//  Config-Template.xcconfig
+//  Craftopia
+//
+//  SECURITY NOTICE: This is a template file for API configuration
+//  DO NOT add your real API keys to this file!
+//  
+//  INSTRUCTIONS:
+//  1. Copy this file and rename it to "Config.xcconfig"
+//  2. Add your real API keys to the copied file
+//  3. The Config.xcconfig file is already added to .gitignore and will not be committed
+//  4. Never commit files containing real API keys to version control
+//
+//  Created by Craftopia Security System
+//
+
+// ============================================================================
+// API CONFIGURATION TEMPLATE
+// ============================================================================
+
+// Cerebras AI API Key
+// Get your API key from: https://inference.cerebras.ai/
+// Format: csk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+CEREBRAS_API_KEY = YOUR_CEREBRAS_API_KEY_HERE
+
+// ============================================================================
+// DEVELOPMENT NOTES
+// ============================================================================
+// 
+// 1. SECURITY BEST PRACTICES:
+//    - Never hardcode API keys in source code
+//    - Never commit API keys to version control
+//    - Use environment-specific configurations
+//    - Rotate keys regularly
+//
+// 2. HOW THIS WORKS:
+//    - This .xcconfig file sets build-time variables
+//    - Variables are injected into Info.plist during build
+//    - SecureAPIConfig reads from Info.plist and Keychain
+//    - Keys are automatically stored in Keychain for security
+//
+// 3. MULTIPLE ENVIRONMENTS:
+//    You can create environment-specific config files:
+//    - Config-Development.xcconfig
+//    - Config-Production.xcconfig
+//    - Config-Staging.xcconfig
+//
+// 4. TESTING:
+//    For testing without real keys, use:
+//    CEREBRAS_API_KEY = csk-test-key-for-development
+//
+// ============================================================================
+
+// Additional API keys can be added here as needed:
+// OPENAI_API_KEY = YOUR_OPENAI_KEY_HERE
+// ANTHROPIC_API_KEY = YOUR_ANTHROPIC_KEY_HERE
+
+// Build configuration settings
+PRODUCT_BUNDLE_IDENTIFIER = com.craftopia.app
+MARKETING_VERSION = 1.0
+CURRENT_PROJECT_VERSION = 1

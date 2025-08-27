@@ -6,7 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2C18B9A82E5F137400631E94 /* matrix_rain.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 2C18B9A72E5F137400631E94 /* matrix_rain.mp4 */; };
+		2C5776972E565B4800DE9FBA /* DesignStyle.md in Resources */ = {isa = PBXBuildFile; fileRef = 2C5776962E565B4800DE9FBA /* DesignStyle.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		2C18B9A72E5F137400631E94 /* matrix_rain.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = matrix_rain.mp4; sourceTree = "<group>"; };
+		2C5776962E565B4800DE9FBA /* DesignStyle.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DesignStyle.md; sourceTree = "<group>"; };
+		2C81C4B92E6789AB00F12345 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		2CA2EF932E3E835200411DB0 /* Craftopia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Craftopia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -32,8 +40,10 @@
 		2CA2EF8A2E3E835200411DB0 = {
 			isa = PBXGroup;
 			children = (
+				2C5776962E565B4800DE9FBA /* DesignStyle.md */,
 				2CA2EF952E3E835200411DB0 /* Craftopia */,
 				2CA2EF942E3E835200411DB0 /* Products */,
+				2C18B9A72E5F137400631E94 /* matrix_rain.mp4 */,
 			);
 			sourceTree = "<group>";
 		};
@@ -109,6 +119,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C5776972E565B4800DE9FBA /* DesignStyle.md in Resources */,
+				2C18B9A82E5F137400631E94 /* matrix_rain.mp4 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,6 +139,7 @@
 /* Begin XCBuildConfiguration section */
 		2CA2EF9C2E3E835300411DB0 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2C81C4B92E6789AB00F12345 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -191,6 +204,7 @@
 		};
 		2CA2EF9D2E3E835300411DB0 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2C81C4B92E6789AB00F12345 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -255,7 +269,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4YC9HSY7JX;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -283,7 +298,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4YC9HSY7JX;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
