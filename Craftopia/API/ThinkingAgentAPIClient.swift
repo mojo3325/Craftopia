@@ -1,6 +1,6 @@
 import Foundation
 
-/// API client for qwen3-235b-thinking model - specialized for final review and polishing
+/// API client for gpt-oss-120b model with reasoning - specialized for final review and polishing
 class ThinkingAgentAPIClient: ObservableObject {
     private let apiKey: String
     private let baseURL = "https://api.cerebras.ai/v1"
@@ -9,7 +9,7 @@ class ThinkingAgentAPIClient: ObservableObject {
         self.apiKey = apiKey
     }
     
-    /// System prompt for bug fixing and simple polishing - final stage reviewer
+    /// System prompt for bug fixing and simple polishing - final stage reviewer with reasoning
     private let systemPrompt = """
 You are the final quality control agent in a four-agent pipeline. You receive:
 1. Original user request
@@ -17,7 +17,14 @@ You are the final quality control agent in a four-agent pipeline. You receive:
 3. SwiftUI-inspired design tokens
 4. Generated HTML application code
 
-Your role as the BUG FIXER and SIMPLE POLISHER:
+Your role as the BUG FIXER and SIMPLE POLISHER with enhanced reasoning capabilities:
+
+USE REASONING TO:
+- Analyze each interactive element systematically
+- Evaluate specification compliance thoroughly
+- Identify potential edge cases and failure points
+- Plan fixes in order of priority
+- Consider the impact of each change on the overall design
 
 PRIORITY 1 - CRITICAL BUG FIXES (MUST FIX):
 - JavaScript errors that break core functionality
@@ -40,11 +47,11 @@ PRIORITY 3 - DESIGN TOKEN CONSISTENCY:
 - Ensure both light and dark themes work correctly
 - Keep minimalist, uncluttered design
 
-PRIORITY 4 - SIMPLE POLISHING (only if no critical bugs):
-- Improve basic user feedback (simple hover states)
-- Fix minor spacing or alignment issues
-- Enhance basic accessibility (focus outlines, labels)
-- Minor UX improvements that don't add complexity
+PRIORITY 4 - EXPLICIT FIXES ONLY (execute only if priorities 1-3 are complete):
+- Add hover states: opacity 0.9 for buttons, no other effects
+- Fix spacing: use 16px/24px padding standards exactly
+- Add focus outlines: 2px solid var(--color-primary) on focusable elements
+- Do NOT add any improvements beyond these specific fixes
 
 WHAT NOT TO DO:
 - Do NOT add features that weren't requested
@@ -62,16 +69,16 @@ OUTPUT REQUIREMENTS:
 - Maintain simple, clean design
 - Production-ready quality
 
-THINKING PROCESS:
-1. Test each interactive element mentally - does it work?
+REASONING APPROACH:
+1. Use your reasoning to systematically test each interactive element
 2. Check if any unrequested features were added - remove them
-3. Verify design tokens are used correctly
+3. Verify design tokens are used correctly throughout
 4. Fix any broken functionality first
-5. Only polish if everything works correctly
+5. Execute priority 4 fixes only after priorities 1-3 are complete
 6. Keep it simple and focused
 7. Return clean, working code
 
-Remember: Your job is to make it work correctly and keep it simple!
+Remember: The reasoning capability allows you to think through complex problems systematically. Use this to fix critical bugs first, remove feature creep, then apply only the specific fixes listed in Priority 4. Do NOT add anything beyond these exact requirements.
 """
     
     /// Review and polish the final application
@@ -115,10 +122,11 @@ Remember: Your job is to make it work correctly and keep it simple!
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt]
             ],
-            "model": "qwen-3-235b-a22b-thinking-2507",
-            "temperature": 0.7,
-            "max_tokens": 64000,
-            "top_p": 0.9,
+            "model": "gpt-oss-120b",
+            "temperature": 0.3,
+            "max_tokens": 12000,
+            "top_p": 0.85,
+            "reasoning_effort": "medium"
         ]
         
         do {
@@ -137,6 +145,9 @@ Remember: Your job is to make it work correctly and keep it simple!
             }
             
             if httpResponse.statusCode != 200 {
+                let errorData = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("[ThinkingAgent] HTTP Error \(httpResponse.statusCode): \(errorData)")
+                
                 let error = ThinkingAgentError.httpError(statusCode: httpResponse.statusCode).localizedDescription
                 return AgentExecutionResult(
                     agentType: .reviewer,
@@ -236,6 +247,9 @@ Remember: Your job is to make it work correctly and keep it simple!
     
     /// Clean HTML content from API response
     private func extractHTMLFromResponse(_ content: String) -> String {
+        print("[ThinkingAgent] Raw response length: \(content.count)")
+        print("[ThinkingAgent] Raw response preview: \(String(content.prefix(200)))...")
+        
         var cleanContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Remove markdown code fences
@@ -251,12 +265,8 @@ Remember: Your job is to make it work correctly and keep it simple!
         )
         cleanContent = cleanContent.replacingOccurrences(of: "```", with: "")
         
-        // Remove <think>/<thinking> reasoning tags from reasoning models
-        cleanContent = cleanContent.replacingOccurrences(
-            of: #"<(think|thinking)[^>]*>[\s\S]*?<\/(think|thinking)>"#,
-            with: "",
-            options: [.regularExpression, .caseInsensitive]
-        )
+        // Note: gpt-oss-120b with reasoning_effort returns reasoning in separate field,
+        // not embedded in content, so no need to remove reasoning tags
         
         // Extract just the HTML document
         if let doctypeRange = cleanContent.range(of: #"<!DOCTYPE\s+html[\s\S]*"#, options: [.regularExpression, .caseInsensitive]) {
@@ -268,7 +278,11 @@ Remember: Your job is to make it work correctly and keep it simple!
             cleanContent = String(cleanContent[..<htmlEnd.upperBound])
         }
         
-        return cleanContent.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalContent = cleanContent.trimmingCharacters(in: .whitespacesAndNewlines)
+        print("[ThinkingAgent] Final HTML length: \(finalContent.count)")
+        print("[ThinkingAgent] HTML extraction successful: \(!finalContent.isEmpty)")
+        
+        return finalContent
     }
 }
 

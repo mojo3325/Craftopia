@@ -1,6 +1,6 @@
 import Foundation
 
-/// API client for gpt-oss-120b model - specialized for planning and specification
+/// API client for gpt-oss-120b model with reasoning - specialized for planning and specification
 class PlannerAgentAPIClient: ObservableObject {
     private let apiKey: String
     private let baseURL = "https://api.cerebras.ai/v1"
@@ -9,16 +9,23 @@ class PlannerAgentAPIClient: ObservableObject {
         self.apiKey = apiKey
     }
     
-    /// System prompt for balanced planning - focused but complete
+    /// System prompt for balanced planning with reasoning - focused but complete
     private let systemPrompt = """
-You are an expert product designer focused on creating WELL-DESIGNED, FUNCTIONAL applications. Your role is to take user requests and plan complete but focused implementations.
+You are an expert product designer with enhanced reasoning capabilities, focused on creating WELL-DESIGNED, FUNCTIONAL applications. Your role is to take user requests and plan complete but focused implementations.
+
+USE REASONING TO:
+- Analyze user needs and identify core vs. nice-to-have features
+- Consider edge cases and potential user flows
+- Evaluate the balance between functionality and simplicity
+- Plan a coherent user experience from start to finish
+- Anticipate implementation challenges and design around them
 
 CORE PRINCIPLES:
-- COMPLETE CORE EXPERIENCE: Include all essential features for a satisfying user experience
-- FOCUSED SCOPE: Avoid unnecessary advanced features, but don't omit basic functionality
-- QUALITY OVER QUANTITY: Better to have fewer features that work perfectly
-- VISUAL COMPLETENESS: Plan for proper visual hierarchy and interface elements
-- USER-FRIENDLY: Consider what users actually expect from this type of application
+- COMPLETE CORE EXPERIENCE: Include all essential features for basic functionality
+- FOCUSED SCOPE: Maximum 4 core features, no advanced features
+- QUALITY IMPLEMENTATION: Each feature must work perfectly
+- VISUAL COMPLETENESS: Include all necessary UI elements for functionality
+- USER-FRIENDLY: Include only expected basic interactions
 
 TASK: Transform the user's request into a complete plan that covers:
 
@@ -36,7 +43,7 @@ OUTPUT FORMAT (JSON):
     "Core Feature 1: Primary functionality with proper interface",
     "Core Feature 2: Essential secondary functionality",
     "Core Feature 3: Important user interaction",
-    "Core Feature 4: Necessary display/feedback (if applicable)"
+    "Core Feature 4: Required feedback display (only if needed for core functionality)"
   ],
   "macroFlows": [
     "Primary Flow: User opens app → performs main actions → sees clear results",
@@ -47,7 +54,7 @@ OUTPUT FORMAT (JSON):
     "Functionality: All core features work correctly and responsively",
     "Interface: Buttons, inputs, and displays are properly styled and functional",
     "Usability: Interface is intuitive and provides appropriate feedback",
-    "Visual: Design is clean, professional, and matches brand aesthetics",
+    "Visual: Design follows brand color scheme exactly with no decorative elements",
     "Responsive: Works well on mobile and desktop devices"
   ],
   "testChecklist": [
@@ -118,6 +125,7 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
             "temperature": 0.3,
             "max_tokens": 12000,
             "top_p": 0.85,
+            "reasoning_effort": "medium"
         ]
         
         do {
@@ -137,6 +145,7 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
             
             if httpResponse.statusCode != 200 {
                 let errorData = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("[PlannerAgent] HTTP Error \(httpResponse.statusCode): \(errorData)")
                 
                 let error = PlannerAgentError.httpError(statusCode: httpResponse.statusCode, message: errorData).localizedDescription
                 return AgentExecutionResult(
@@ -214,8 +223,12 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
         return prompt
     }
     
-    /// Extract and validate planner output
+    /// Extract and validate planner output with robust JSON parsing
     private func extractAndValidatePlannerOutput(_ rawContent: String) -> String {
+        // Log raw content for debugging
+        print("[PlannerAgent] Raw response length: \(rawContent.count)")
+        print("[PlannerAgent] Raw response preview: \(String(rawContent.prefix(200)))...")
+        
         // Clean up the response to extract JSON
         var cleanContent = rawContent.trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -232,22 +245,48 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
         
         cleanContent = cleanContent.trimmingCharacters(in: .whitespacesAndNewlines)
         
+        // Try to find JSON object boundaries if there's extra text
+        if let jsonStart = cleanContent.firstIndex(of: "{"),
+           let jsonEnd = cleanContent.lastIndex(of: "}") {
+            let jsonRange = jsonStart...jsonEnd
+            cleanContent = String(cleanContent[jsonRange])
+        }
+        
         // Validate it's proper JSON by trying to parse it
-        guard let jsonData = cleanContent.data(using: .utf8),
-              let jsonObject = try? JSONSerialization.jsonObject(with: jsonData),
-              let dict = jsonObject as? [String: Any] else {
+        guard let jsonData = cleanContent.data(using: .utf8) else {
+            print("[PlannerAgent] Failed to convert to data")
             return ""
         }
         
-        // Validate required fields
-        let requiredFields = ["features", "macroFlows", "acceptanceCriteria", "testChecklist", "architecture", "userExperience"]
-        for field in requiredFields {
-            guard dict[field] != nil else {
+        do {
+            guard let jsonObject = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
+                print("[PlannerAgent] Failed to parse JSON object")
                 return ""
             }
+            
+            // Validate required fields with more lenient approach
+            let requiredFields = ["features", "macroFlows", "acceptanceCriteria", "testChecklist", "architecture", "userExperience"]
+            let criticalFields = ["features", "macroFlows"] // Most critical fields
+            
+            let missingCritical = criticalFields.filter { jsonObject[$0] == nil }
+            let missingAll = requiredFields.filter { jsonObject[$0] == nil }
+            
+            if !missingCritical.isEmpty {
+                print("[PlannerAgent] Missing critical fields: \(missingCritical)")
+                return ""
+            }
+            
+            if !missingAll.isEmpty {
+                print("[PlannerAgent] Missing optional fields: \(missingAll), but proceeding with core planning")
+            }
+            
+            print("[PlannerAgent] JSON validation successful")
+            return cleanContent
+            
+        } catch {
+            print("[PlannerAgent] JSON parsing error: \(error)")
+            return ""
         }
-        
-        return cleanContent
     }
 }
 

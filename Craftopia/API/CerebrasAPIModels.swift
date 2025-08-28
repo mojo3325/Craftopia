@@ -33,9 +33,10 @@ struct CerebrasChoice: Codable {
 struct CerebrasMessage: Codable {
     let role: String
     let content: String
+    let reasoning: String? // Optional reasoning field for gpt-oss-120b with reasoning_effort
     
     enum CodingKeys: String, CodingKey {
-        case role, content
+        case role, content, reasoning
     }
 }
 

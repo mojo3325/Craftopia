@@ -1,6 +1,6 @@
 import Foundation
 
-/// API client for gpt-oss-120b model - specialized for theming and UX design tokens
+/// API client for gpt-oss-120b model with reasoning - specialized for theming and UX design tokens
 class ThemerAgentAPIClient: ObservableObject {
     private let apiKey: String
     private let baseURL = "https://api.cerebras.ai/v1"
@@ -9,9 +9,17 @@ class ThemerAgentAPIClient: ObservableObject {
         self.apiKey = apiKey
     }
     
-    /// System prompt for minimalist SwiftUI-inspired design tokens
+    /// System prompt for minimalist SwiftUI-inspired design tokens with reasoning
     private let systemPrompt = """
-You are an expert UX/UI designer specializing in Soft UI (Flat 2.0) design systems. Your role is to create design tokens that match Craftopia's sophisticated, modern aesthetic - a refined flat design with subtle depth through soft shadows, gentle gradients, and elegant surfaces.
+You are an expert UX/UI designer with enhanced reasoning capabilities, specializing in Soft UI (Flat 2.0) design systems. Your role is to create design tokens that match Craftopia's sophisticated, modern aesthetic - a refined flat design with subtle depth through soft shadows, gentle gradients, and elegant surfaces.
+
+USE REASONING TO:
+- Analyze the user's request to understand the aesthetic requirements
+- Consider accessibility requirements for contrast ratios and touch targets
+- Evaluate color harmony and brand consistency
+- Plan shadow and spacing systems that create visual hierarchy
+- Balance minimalism with functional clarity
+- Ensure design tokens work together as a cohesive system
 
 CRAFTOPIA DESIGN PHILOSOPHY:
 - SOFT UI (FLAT 2.0): Clean flat design enhanced with subtle shadows and gentle gradients for depth
@@ -30,13 +38,13 @@ TASK: Create design tokens that perfectly match Craftopia's Soft UI aesthetic:
 6. INTERACTION DESIGN: Soft hover states and micro-interactions
 
 SOFT UI DESIGN PRINCIPLES:
-- Multiple soft shadows (light outer + deeper inner) for depth
-- Thin borders (1px) with thoughtful opacity
-- Subtle gradients for surface depth, not decoration
-- Corner radius: 10-16px for modern, friendly feel
-- High contrast ratios for accessibility (WCAG AA+)
-- Touch-friendly sizing (44px minimum)
-- Generous spacing for premium feel
+- Multiple defined shadows (light outer + deeper inner) for depth
+- Borders: exactly 1px with specified opacity values
+- Gradients: only for surface depth, opacity 0.03-0.06 maximum
+- Corner radius: exactly 10-16px, no variations
+- Contrast ratios: minimum 4.5:1 for normal text, 3:1 for large text
+- Touch targets: minimum 44px for all interactive elements
+- Spacing: use defined spacing tokens only, no custom values
 
 OUTPUT FORMAT (JSON):
 {
@@ -112,13 +120,13 @@ OUTPUT FORMAT (JSON):
     "--space-16": "4rem"
   },
   "componentStyling": {
-    "primaryButtons": "Blue gradient background (linear-gradient from --color-primary-gradient-top to --color-primary-gradient-bottom), white text, 44px min height. Soft shadow: 0 6px 12px --color-shadow-strong, 0 2px 6px --color-shadow. Corner radius: 12px. Hover: slight shadow increase.",
-    "secondaryButtons": "--color-surface background with --color-text, thin border (1px solid --color-border). Same shadow as primary but lighter. Corner radius: 10px. Hover: slightly darker background.",
+    "primaryButtons": "Blue gradient background (linear-gradient from --color-primary-gradient-top to --color-primary-gradient-bottom), white text, exactly 44px min height. Shadow: 0 6px 12px --color-shadow-strong, 0 2px 6px --color-shadow. Corner radius: 12px. Hover: transform translateY(-1px), no other changes.",
+    "secondaryButtons": "--color-surface background with --color-text, 1px solid --color-border border. Shadow: 0 2px 6px --color-shadow. Corner radius: 10px. Hover: background opacity 0.9, no other changes.",
     "destructiveButtons": "--color-error background with white text. Same shadow treatment as primary. Use for delete/clear actions only.",
     "inputs": "--color-surface background, 1px border --color-border, soft inset shadow. Focus: border becomes --color-primary. Padding: 16px. Corner radius: 12px. Shadow: 0 2px 6px --color-shadow.",
-    "containers": "--color-surface background (or gradient from surface to surface), 1px border --color-border. Soft shadow: 0 3px 8px --color-shadow. Corner radius: 16px. Padding: 16-24px.",
-    "cards": "White/dark surface with gradient background, thin border, soft shadow for elevation. No heavy shadows - keep it elegant and light.",
-    "layout": "Use CSS Grid/Flexbox with --space-4 gaps for related elements, --space-6 for sections. Generous padding for premium feel."
+    "containers": "--color-surface background, 1px border --color-border. Shadow: 0 3px 8px --color-shadow. Corner radius: 16px. Padding: exactly 16px for compact areas, 24px for main sections.",
+    "cards": "White/dark surface background, 1px border --color-border, shadow: 0 2px 6px --color-shadow. Corner radius: 14px. No gradient overlays.",
+    "layout": "CSS Grid/Flexbox with --space-4 (16px) gaps for related elements, --space-6 (24px) for sections. Padding values from spacing tokens only."
   },
   "shadowSystem": {
     "soft": "0 2px 6px var(--color-shadow)",
@@ -127,7 +135,7 @@ OUTPUT FORMAT (JSON):
     "inset": "inset 0 1px 3px var(--color-shadow)"
   },
   "brandingConcept": "Soft UI (Flat 2.0) aesthetic matching Craftopia's sophisticated design language. Clean surfaces enhanced with subtle shadows and gentle gradients. Primary blue (#186DEE) for actions, refined grays for supporting elements. Premium feel through careful shadow work and surface treatments.",
-  "visualStyle": "Soft UI design with elegant depth through multi-layered shadows and subtle gradients. Clean typography hierarchy, generous spacing, sophisticated surface treatments. Consistent shadow language: soft shadows for elevation, thin borders for definition, gradient backgrounds for premium feel. Mobile-optimized with 44px+ touch targets."
+  "visualStyle": "Soft UI design with defined depth using multi-layered shadows and surface gradients. Typography hierarchy using specified font weights. Spacing using defined tokens only. Shadow specifications: soft shadows for elevation, 1px borders for definition, gradient backgrounds for buttons only. Mobile-optimized with 44px minimum touch targets."
 }
 
 SOFT UI DESIGN GUIDELINES:
@@ -153,9 +161,11 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
     /// Generate design tokens and visual theme
     func generateTheme(context: AgentContext) async throws -> AgentExecutionResult {
         let startTime = Date()
+        print("[ThemerAgent] Starting theme generation...")
         
         // Validate API key
         if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            print("[ThemerAgent] ERROR: API key is empty")
             let error = ThemerAgentError.invalidAPIKey.localizedDescription
             return AgentExecutionResult(
                 agentType: .themer,
@@ -166,6 +176,7 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
         }
         
         guard let url = URL(string: "\(baseURL)/chat/completions") else {
+            print("[ThemerAgent] ERROR: Invalid URL")
             let error = ThemerAgentError.invalidURL.localizedDescription
             return AgentExecutionResult(
                 agentType: .themer,
@@ -185,6 +196,7 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
         
         // Build theming prompt
         let userPrompt = buildThemingPrompt(from: context)
+        print("[ThemerAgent] Built user prompt, length: \(userPrompt.count)")
         
         let requestBody: [String: Any] = [
             "messages": [
@@ -195,12 +207,17 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
             "temperature": 0.5,
             "max_tokens": 12000,
             "top_p": 0.9,
+            "reasoning_effort": "medium"
         ]
+        
+        print("[ThemerAgent] Request body prepared, making API call...")
         
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+            print("[ThemerAgent] Request serialized successfully")
             
             let (data, response) = try await URLSession.shared.data(for: request)
+            print("[ThemerAgent] Received response, data length: \(data.count)")
             
             guard let httpResponse = response as? HTTPURLResponse else {
                 let error = ThemerAgentError.invalidResponse.localizedDescription
@@ -214,6 +231,8 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
             
             if httpResponse.statusCode != 200 {
                 let errorData = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("[ThemerAgent] HTTP Error \(httpResponse.statusCode): \(errorData)")
+                
                 let error = ThemerAgentError.httpError(statusCode: httpResponse.statusCode, message: errorData).localizedDescription
                 return AgentExecutionResult(
                     agentType: .themer,
@@ -223,9 +242,18 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
                 )
             }
             
+            print("[ThemerAgent] HTTP response status: \(httpResponse.statusCode)")
+            
+            // Log raw JSON response for debugging
+            if let rawJSON = String(data: data, encoding: .utf8) {
+                print("[ThemerAgent] Raw JSON response: \(rawJSON)")
+            }
+            
             let apiResponse = try JSONDecoder().decode(CerebrasAPIResponse.self, from: data)
+            print("[ThemerAgent] API response decoded successfully")
             
             guard let firstChoice = apiResponse.choices.first else {
+                print("[ThemerAgent] ERROR: No choices in API response")
                 let error = ThemerAgentError.noChoices.localizedDescription
                 return AgentExecutionResult(
                     agentType: .themer,
@@ -235,7 +263,16 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
                 )
             }
             
+            print("[ThemerAgent] Found choice, extracting content...")
+            
             let rawContent = firstChoice.message.content
+            
+            // Log reasoning if available (for debugging)
+            if let reasoning = firstChoice.message.reasoning {
+                print("[ThemerAgent] Model reasoning available, length: \(reasoning.count)")
+                print("[ThemerAgent] Reasoning preview: \(String(reasoning.prefix(200)))...")
+            }
+            
             let themerOutput = extractAndValidateThemerOutput(rawContent)
             
             guard !themerOutput.isEmpty else {
@@ -256,6 +293,11 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
             )
             
         } catch {
+            print("[ThemerAgent] CATCH ERROR: \(error)")
+            print("[ThemerAgent] Error type: \(type(of: error))")
+            if let decodingError = error as? DecodingError {
+                print("[ThemerAgent] Decoding error details: \(decodingError)")
+            }
             return AgentExecutionResult(
                 agentType: .themer,
                 status: .failed,
@@ -295,8 +337,12 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
         return prompt
     }
     
-    /// Extract and validate themer output
-    private func extractAndValidateThemerOutput(_ rawContent: String) -> String {       
+    /// Extract and validate themer output with robust JSON parsing
+    private func extractAndValidateThemerOutput(_ rawContent: String) -> String {
+        // Log raw content for debugging
+        print("[ThemerAgent] Raw response length: \(rawContent.count)")
+        print("[ThemerAgent] Raw response preview: \(String(rawContent.prefix(200)))...")
+        
         // Clean up the response to extract JSON
         var cleanContent = rawContent.trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -313,26 +359,48 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
         
         cleanContent = cleanContent.trimmingCharacters(in: .whitespacesAndNewlines)
         
+        // Try to find JSON object boundaries if there's extra text
+        if let jsonStart = cleanContent.firstIndex(of: "{"),
+           let jsonEnd = cleanContent.lastIndex(of: "}") {
+            let jsonRange = jsonStart...jsonEnd
+            cleanContent = String(cleanContent[jsonRange])
+        }
+        
         // Validate it's proper JSON by trying to parse it
-        guard let jsonData = cleanContent.data(using: .utf8),
-              let jsonObject = try? JSONSerialization.jsonObject(with: jsonData),
-              let dict = jsonObject as? [String: Any] else {
+        guard let jsonData = cleanContent.data(using: .utf8) else {
+            print("[ThemerAgent] Failed to convert to data")
             return ""
         }
         
-        // Validate required fields (more flexible)
-        let requiredFields = ["lightThemeTokens", "darkThemeTokens", "typography", "spacing"]
-        let missingFields = requiredFields.filter { dict[$0] == nil }
-        
-        if !missingFields.isEmpty {
-            // If we have the core color and typography, try to proceed
-            if dict["lightThemeTokens"] != nil && dict["darkThemeTokens"] != nil {
-            } else {
+        do {
+            guard let jsonObject = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
+                print("[ThemerAgent] Failed to parse JSON object")
                 return ""
             }
+            
+            // Validate required fields with more lenient approach
+            let requiredFields = ["lightThemeTokens", "darkThemeTokens"]
+            let criticalFields = requiredFields.filter { jsonObject[$0] == nil }
+            
+            if !criticalFields.isEmpty {
+                print("[ThemerAgent] Missing critical fields: \(criticalFields)")
+                
+                // Try to find partial valid structure
+                if jsonObject["lightThemeTokens"] != nil || jsonObject["darkThemeTokens"] != nil {
+                    print("[ThemerAgent] Found partial theme tokens, proceeding with available data")
+                    // Return what we have - partial success is better than complete failure
+                } else {
+                    return ""
+                }
+            }
+            
+            print("[ThemerAgent] JSON validation successful")
+            return cleanContent
+            
+        } catch {
+            print("[ThemerAgent] JSON parsing error: \(error)")
+            return ""
         }
-        
-        return cleanContent
     }
 }
 
