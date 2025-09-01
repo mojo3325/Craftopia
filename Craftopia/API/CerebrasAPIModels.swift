@@ -11,9 +11,13 @@ struct CerebrasAPIResponse: Codable {
     let model: String
     let choices: [CerebrasChoice]
     let usage: CerebrasUsage?
+    let systemFingerprint: String?
+    let timeInfo: CerebrasTimeInfo?
     
     enum CodingKeys: String, CodingKey {
         case id, object, created, model, choices, usage
+        case systemFingerprint = "system_fingerprint"
+        case timeInfo = "time_info"
     }
 }
 
@@ -32,7 +36,7 @@ struct CerebrasChoice: Codable {
 /// Message structure containing the generated content
 struct CerebrasMessage: Codable {
     let role: String
-    let content: String
+    let content: String? // Optional - may be missing with reasoning models
     let reasoning: String? // Optional reasoning field for gpt-oss-120b with reasoning_effort
     
     enum CodingKeys: String, CodingKey {
@@ -45,11 +49,39 @@ struct CerebrasUsage: Codable {
     let promptTokens: Int
     let completionTokens: Int
     let totalTokens: Int
+    let promptTokensDetails: CerebrasPromptTokensDetails?
     
     enum CodingKeys: String, CodingKey {
         case promptTokens = "prompt_tokens"
         case completionTokens = "completion_tokens"
         case totalTokens = "total_tokens"
+        case promptTokensDetails = "prompt_tokens_details"
+    }
+}
+
+/// Prompt tokens details
+struct CerebrasPromptTokensDetails: Codable {
+    let cachedTokens: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case cachedTokens = "cached_tokens"
+    }
+}
+
+/// Time information for the request
+struct CerebrasTimeInfo: Codable {
+    let queueTime: Double?
+    let promptTime: Double?
+    let completionTime: Double?
+    let totalTime: Double?
+    let created: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case queueTime = "queue_time"
+        case promptTime = "prompt_time"
+        case completionTime = "completion_time"
+        case totalTime = "total_time"
+        case created
     }
 }
 

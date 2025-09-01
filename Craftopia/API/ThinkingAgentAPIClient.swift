@@ -1,118 +1,73 @@
 import Foundation
 
 /// API client for gpt-oss-120b model with reasoning - specialized for final review and polishing
-class ThinkingAgentAPIClient: ObservableObject {
-    private let apiKey: String
-    private let baseURL = "https://api.cerebras.ai/v1"
+class ThinkingAgentAPIClient: BaseAPIClient {
     
-    init(apiKey: String) {
-        self.apiKey = apiKey
-    }
-    
-    /// System prompt for bug fixing and simple polishing - final stage reviewer with reasoning
+    /// System prompt for bug fixing and simple polishing - final stage reviewer with thinking
     private let systemPrompt = """
-You are the final quality control agent in a four-agent pipeline. You receive:
-1. Original user request
-2. Minimal specification focusing on core features
-3. SwiftUI-inspired design tokens
-4. Generated HTML application code
+    You are OpenAI gpt-oss-120b aligned to the OpenAI Model Spec. You are the final quality control agent in a four-agent pipeline.
 
-Your role as the BUG FIXER and SIMPLE POLISHER with enhanced reasoning capabilities:
+    **INSTRUCTION HIERARCHY:**
+    1. Your primary goal is to fix bugs and polish the provided React JSX code by strictly following the detailed checklist and priorities below.
+    2. You MUST follow the output format strictly. No exceptions.
 
-USE REASONING TO:
-- Analyze each interactive element systematically
-- Evaluate specification compliance thoroughly
-- Identify potential edge cases and failure points
-- Plan fixes in order of priority
-- Consider the impact of each change on the overall design
+    **REASONING PROCESS & CHECKLIST (HIDDEN):**
+    - Reasoning Effort: medium
+    - Inside your reasoning, you MUST systematically follow these priorities:
 
-PRIORITY 1 - CRITICAL BUG FIXES (MUST FIX):
-- JavaScript errors that break core functionality
-- Event handlers not properly attached to buttons/inputs
-- Form inputs not capturing or processing data
-- Calculations not working or displaying results
-- Basic interactions completely broken
-- Critical accessibility issues preventing usage
-- Mobile responsiveness breaking core functionality
+    PRIORITY 1 - CRITICAL BUG FIXES (MUST FIX):
+    - React errors that break core functionality (JSX syntax errors, hook violations)
+    - Event handlers not properly attached to buttons/inputs (onClick, onChange)
+    - Form inputs not capturing or processing data (controlled components)
+    - State management issues (useState hooks not updating properly, infinite re-renders)
+    - useEffect dependency issues causing performance problems
+    - Calculations not working or displaying results
+    - Basic interactions completely broken
+    - Critical accessibility issues preventing usage
+    - Mobile responsiveness breaking core functionality
+    - TEXT READABILITY ISSUES: Poor contrast between text and background colors
+    - BUTTON TEXT VISIBILITY: Text on buttons must be clearly readable in both light and dark themes
+    - INPUT TEXT CONTRAST: Input field text must contrast well with input background
 
-PRIORITY 2 - SPECIFICATION COMPLIANCE:
-- Verify ONLY the core features from specification are implemented
-- Remove any feature creep or unrequested functionality
-- Ensure the app does exactly what was requested, nothing more
-- Confirm all specified core features actually work
+    PRIORITY 2 - SPECIFICATION COMPLIANCE:
+    - Verify ONLY the core features from specification are implemented
+    - Remove any feature creep or unrequested functionality
+    - Ensure the app does exactly what was requested, nothing more
+    - Confirm all specified core features actually work
 
-PRIORITY 3 - DESIGN TOKEN CONSISTENCY:
-- Maintain exact design token usage throughout
-- Preserve SwiftUI-inspired clean aesthetic
-- Ensure both light and dark themes work correctly
-- Keep minimalist, uncluttered design
+    PRIORITY 3 - DESIGN CONSISTENCY:
+    - Maintain aesthetic consistency with the design direction provided
+    - Preserve SwiftUI-inspired clean aesthetic
+    - Ensure both light and dark themes work correctly
+    - Keep minimalist, uncluttered design
+    - COLOR THEME VALIDATION: Verify all colors are theme-appropriate
+    - CONTRAST RATIO CHECK: Ensure minimum 4.5:1 contrast ratio for text readability
+    - THEME-SPECIFIC FIXES: Apply correct colors for light/dark themes (dark text on light backgrounds, light text on dark backgrounds)
+    - BUTTON COLOR FIXES: ensure text is visible against button background
+    - INPUT FIELD COLORS: Verify input text color contrasts with input background color
 
-PRIORITY 4 - EXPLICIT FIXES ONLY (execute only if priorities 1-3 are complete):
-- Add hover states: opacity 0.9 for buttons, no other effects
-- Fix spacing: use 16px/24px padding standards exactly
-- Add focus outlines: 2px solid var(--color-primary) on focusable elements
-- Do NOT add any improvements beyond these specific fixes
+    PRIORITY 4 - EXPLICIT FIXES ONLY (execute only if priorities 1-3 are complete):
+    - Add hover states: opacity 0.9 for buttons, no other effects
+    - Fix spacing: use 16px/24px padding standards exactly
+    - Add focus outlines: 2px solid var(--color-primary) on focusable elements
+    - Do NOT add any improvements beyond these specific fixes
 
-WHAT NOT TO DO:
-- Do NOT add features that weren't requested
-- Do NOT make the design more complex or "impressive"
-- Do NOT add animations, effects, or visual flourishes
-- Do NOT add history, settings, or configuration panels
-- Do NOT add "nice-to-have" functionality
-- Do NOT change the core simplicity of the design
+    WHAT NOT TO DO:
+    - Do NOT add features that weren't requested
+    - Do NOT make the design more complex or "impressive"
+    - Do NOT add animations, effects, or visual flourishes
+    - Do NOT add history, settings, or configuration panels
+    - Do NOT add "nice-to-have" functionality
+    - Do NOT change the core simplicity of the design
+    - Do NOT add theme switching buttons or theme toggle functionality
 
-OUTPUT REQUIREMENTS:
-- Return ONLY the improved HTML code
-- No explanations or markdown fences
-- Complete, self-contained HTML document
-- All core functionality must work perfectly
-- Maintain simple, clean design
-- Production-ready quality
+    **FINAL OUTPUT (VISIBLE):**
+    - After your thinking process is complete, provide the final, complete, and corrected React JSX code.
+    """
 
-REASONING APPROACH:
-1. Use your reasoning to systematically test each interactive element
-2. Check if any unrequested features were added - remove them
-3. Verify design tokens are used correctly throughout
-4. Fix any broken functionality first
-5. Execute priority 4 fixes only after priorities 1-3 are complete
-6. Keep it simple and focused
-7. Return clean, working code
-
-Remember: The reasoning capability allows you to think through complex problems systematically. Use this to fix critical bugs first, remove feature creep, then apply only the specific fixes listed in Priority 4. Do NOT add anything beyond these exact requirements.
-"""
-    
     /// Review and polish the final application
     func reviewAndImprove(context: AgentContext) async throws -> AgentExecutionResult {
         let startTime = Date()
-        
-        // Validate API key
-        if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let error = ThinkingAgentError.invalidAPIKey.localizedDescription
-            return AgentExecutionResult(
-                agentType: .reviewer,
-                status: .failed,
-                error: error,
-                executionTimeSeconds: Date().timeIntervalSince(startTime)
-            )
-        }
-        
-        guard let url = URL(string: "\(baseURL)/chat/completions") else {
-            let error = ThinkingAgentError.invalidURL.localizedDescription
-            return AgentExecutionResult(
-                agentType: .reviewer,
-                status: .failed,
-                error: error,
-                executionTimeSeconds: Date().timeIntervalSince(startTime)
-            )
-        }
-        
-        // Prepare request
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.timeoutInterval = 120
         
         // Build comprehensive review prompt with all context
         let userPrompt = buildReviewPrompt(from: context)
@@ -123,61 +78,50 @@ Remember: The reasoning capability allows you to think through complex problems 
                 ["role": "user", "content": userPrompt]
             ],
             "model": "gpt-oss-120b",
-            "temperature": 0.3,
-            "max_tokens": 12000,
-            "top_p": 0.85,
+            "temperature": 0.5,
+            "max_completion_tokens": 12000,
+            "top_p": 0.9,
             "reasoning_effort": "medium"
         ]
         
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                let error = ThinkingAgentError.invalidResponse.localizedDescription
-                return AgentExecutionResult(
-                    agentType: .reviewer,
-                    status: .failed,
-                    error: error,
-                    executionTimeSeconds: Date().timeIntervalSince(startTime)
-                )
-            }
-            
-            if httpResponse.statusCode != 200 {
-                let errorData = String(data: data, encoding: .utf8) ?? "Unknown error"
-                print("[ThinkingAgent] HTTP Error \(httpResponse.statusCode): \(errorData)")
-                
-                let error = ThinkingAgentError.httpError(statusCode: httpResponse.statusCode).localizedDescription
-                return AgentExecutionResult(
-                    agentType: .reviewer,
-                    status: .failed,
-                    error: error,
-                    executionTimeSeconds: Date().timeIntervalSince(startTime)
-                )
-            }
-            
-            let apiResponse = try JSONDecoder().decode(CerebrasAPIResponse.self, from: data)
+            let apiResponse = try await makeAPIRequest(
+                requestBody: requestBody,
+                responseType: CerebrasAPIResponse.self,
+                agentName: "ThinkingAgent"
+            )
             
             guard let firstChoice = apiResponse.choices.first else {
-                let error = ThinkingAgentError.noChoices.localizedDescription
                 return AgentExecutionResult(
                     agentType: .reviewer,
                     status: .failed,
-                    error: error,
+                    error: ThinkingAgentError.noChoices.localizedDescription,
                     executionTimeSeconds: Date().timeIntervalSince(startTime)
                 )
             }
             
-            let rawContent = firstChoice.message.content
+            guard let rawContent = extractContent(from: firstChoice, agentName: "ThinkingAgent") else {
+                return AgentExecutionResult(
+                    agentType: .reviewer,
+                    status: .failed,
+                    error: ThinkingAgentError.noValidImprovement.localizedDescription,
+                    executionTimeSeconds: Date().timeIntervalSince(startTime)
+                )
+            }
+            
+            // Log reasoning if available (for debugging)
+            if let reasoning = firstChoice.message.reasoning {
+                print("[ThinkingAgent] Model reasoning available, length: \(reasoning.count)")
+                print("[ThinkingAgent] Reasoning preview: \(String(reasoning.prefix(200)))...")
+            }
+            
             let improvedContent = extractHTMLFromResponse(rawContent)
             
             guard !improvedContent.isEmpty else {
-                let error = ThinkingAgentError.noValidImprovement.localizedDescription
                 return AgentExecutionResult(
                     agentType: .reviewer,
                     status: .failed,
-                    error: error,
+                    error: ThinkingAgentError.noValidImprovement.localizedDescription,
                     executionTimeSeconds: Date().timeIntervalSince(startTime)
                 )
             }
@@ -189,7 +133,18 @@ Remember: The reasoning capability allows you to think through complex problems 
                 executionTimeSeconds: Date().timeIntervalSince(startTime)
             )
             
+        } catch let error as APIError {
+            return AgentExecutionResult(
+                agentType: .reviewer,
+                status: .failed,
+                error: error.localizedDescription,
+                executionTimeSeconds: Date().timeIntervalSince(startTime)
+            )
         } catch {
+            print("[ThinkingAgent] CATCH ERROR: \(error)")
+            if let decodingError = error as? DecodingError {
+                print("[ThinkingAgent] Decoding error details: \(decodingError)")
+            }
             return AgentExecutionResult(
                 agentType: .reviewer,
                 status: .failed,
@@ -209,9 +164,9 @@ Remember: The reasoning capability allows you to think through complex problems 
             prompt += "\n\(plannerOutput)"
         }
         
-        // Include design tokens and visual design
+        // Include design direction and aesthetic mood
         if let themerOutput = context.themerOutput {
-            prompt += "\n\n=== DESIGN TOKENS & VISUAL DESIGN ==="
+            prompt += "\n\n=== DESIGN DIRECTION & AESTHETIC MOOD ==="
             prompt += "\n\(themerOutput)"
         }
         
@@ -231,21 +186,26 @@ Remember: The reasoning capability allows you to think through complex problems 
         prompt += """
         
         
-        REVIEW AND FIX TASK:
+        REACT REVIEW AND FIX TASK:
         1. First, check if ALL interactive elements work correctly (buttons, inputs, calculations)
-        2. Remove any features that weren't specifically requested (avoid feature creep)
-        3. Verify the design matches SwiftUI minimalist aesthetic
-        4. Fix any broken functionality
-        5. Keep it simple - don't add complexity or "impressive" features
-        6. Return the final, working HTML application
-        
-        Focus on making core functionality work perfectly while keeping it beautifully simple.
+        2. **CRITICAL COLOR CHECK**: Verify ALL text is readable in both light and dark themes
+           - Check button text visibility (especially calculator/number buttons)
+           - Validate input field text contrast
+           - Ensure no poor color combinations (light text on light backgrounds, etc.)
+        3. Remove any features that weren't specifically requested (avoid feature creep)
+        4. Verify the design matches SwiftUI minimalist aesthetic
+        5. Fix any broken React functionality (hooks, state management, event handlers)
+        6. **THEME CONSISTENCY**: Ensure colors are appropriate for each theme (dark text on light, light text on dark)
+        7. Keep it simple - don't add complexity or "impressive" features
+        8. Return the final, working React JSX component
+
+        Focus on making core React functionality work perfectly while keeping it beautifully simple and ensuring excellent readability.
         """
         
         return prompt
     }
     
-    /// Clean HTML content from API response
+    /// Clean React JSX content from API response
     private func extractHTMLFromResponse(_ content: String) -> String {
         print("[ThinkingAgent] Raw response length: \(content.count)")
         print("[ThinkingAgent] Raw response preview: \(String(content.prefix(200)))...")
@@ -254,7 +214,7 @@ Remember: The reasoning capability allows you to think through complex problems 
         
         // Remove markdown code fences
         cleanContent = cleanContent.replacingOccurrences(
-            of: #"```(?:html|javascript|css)?\s*\n?"#,
+            of: #"```(?:html|javascript|css|jsx|react|js)?\s*\n?"#,
             with: "",
             options: .regularExpression
         )
@@ -265,22 +225,55 @@ Remember: The reasoning capability allows you to think through complex problems 
         )
         cleanContent = cleanContent.replacingOccurrences(of: "```", with: "")
         
-        // Note: gpt-oss-120b with reasoning_effort returns reasoning in separate field,
-        // not embedded in content, so no need to remove reasoning tags
-        
-        // Extract just the HTML document
-        if let doctypeRange = cleanContent.range(of: #"<!DOCTYPE\s+html[\s\S]*"#, options: [.regularExpression, .caseInsensitive]) {
-            cleanContent = String(cleanContent[doctypeRange.lowerBound...])
-        } else if let htmlStart = cleanContent.range(of: #"<html[\s\S]*"#, options: [.regularExpression, .caseInsensitive]) {
-            cleanContent = String(cleanContent[htmlStart.lowerBound...])
+        // Extract React JSX component
+        if let functionMatch = cleanContent.range(of: #"function\s+App\s*\([^)]*\)[\s\S]*"#, options: [.regularExpression]) {
+            cleanContent = String(cleanContent[functionMatch.lowerBound...])
+        } else if let constMatch = cleanContent.range(of: #"const\s+App\s*=[\s\S]*"#, options: [.regularExpression]) {
+            cleanContent = String(cleanContent[constMatch.lowerBound...])
         }
-        if let htmlEnd = cleanContent.range(of: #"</html>"#, options: [.regularExpression, .caseInsensitive]) {
-            cleanContent = String(cleanContent[..<htmlEnd.upperBound])
+        
+        // Find the last closing brace of the component
+        var braceCount = 0
+        var inFunction = false
+        var endIndex = cleanContent.endIndex
+        
+        for (index, char) in cleanContent.enumerated() {
+            let stringIndex = cleanContent.index(cleanContent.startIndex, offsetBy: index)
+            if char == "{" {
+                if !inFunction {
+                    inFunction = true
+                }
+                braceCount += 1
+            } else if char == "}" {
+                braceCount -= 1
+                if inFunction && braceCount == 0 {
+                    endIndex = cleanContent.index(stringIndex, offsetBy: 1)
+                    break
+                }
+            }
+        }
+        
+        if endIndex != cleanContent.endIndex {
+            cleanContent = String(cleanContent[..<endIndex])
         }
         
         let finalContent = cleanContent.trimmingCharacters(in: .whitespacesAndNewlines)
-        print("[ThinkingAgent] Final HTML length: \(finalContent.count)")
-        print("[ThinkingAgent] HTML extraction successful: \(!finalContent.isEmpty)")
+        print("[ThinkingAgent] Final React code length: \(finalContent.count)")
+        print("[ThinkingAgent] React extraction successful: \(!finalContent.isEmpty)")
+        
+        // Validate that the reviewer actually returned a meaningful React component.
+        // Guard against degenerate outputs like "const App = () => {...}" with only an ellipsis
+        // or extremely short placeholders that break the pipeline.
+        let minimumLength = 200
+        let hasReturnJSX = finalContent.range(of: #"return\s*\("#, options: [.regularExpression]) != nil
+            || finalContent.range(of: #"return\s*<"#, options: [.regularExpression]) != nil
+        let mentionsAppComponent = finalContent.contains("const App") || finalContent.contains("function App")
+        let looksTruncated = finalContent.contains("...") && finalContent.count < 500
+        
+        if finalContent.count < minimumLength || !hasReturnJSX || !mentionsAppComponent || looksTruncated {
+            print("[ThinkingAgent] Reviewer output rejected as too short or invalid. Falling back upstream.")
+            return ""
+        }
         
         return finalContent
     }
@@ -288,36 +281,15 @@ Remember: The reasoning capability allows you to think through complex problems 
 
 /// Errors specific to thinking agent
 enum ThinkingAgentError: Error, LocalizedError {
-    case invalidURL
-    case invalidResponse
-    case httpError(statusCode: Int)
     case noChoices
     case noValidImprovement
-    case invalidAPIKey
     
     var errorDescription: String? {
         switch self {
-        case .invalidURL:
-            return "Invalid API URL for thinking agent"
-        case .invalidResponse:
-            return "Invalid response from thinking agent"
-        case .httpError(let statusCode):
-            switch statusCode {
-            case 401:
-                return "Invalid API key for thinking agent"
-            case 429:
-                return "Rate limit exceeded for thinking agent"
-            case 404:
-                return "Thinking model not found"
-            default:
-                return "Thinking agent HTTP error: \(statusCode)"
-            }
         case .noChoices:
-            return "No response from thinking agent"
+            return "No response choices received"
         case .noValidImprovement:
             return "Thinking agent failed to improve the code"
-        case .invalidAPIKey:
-            return "Thinking agent API key not configured"
         }
     }
 }

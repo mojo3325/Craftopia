@@ -55,9 +55,9 @@ struct GenerationContentView: View {
                 .transition(.opacity)
                 
             case .success:
-                if let html = viewModel.generatedContent {
+                if let reactCode = viewModel.generatedContent {
                     HtmlViewerScreen(
-                        html: html,
+                        reactCode: reactCode,
                         onBack: onReset,
                         onNew: onReset
                     )

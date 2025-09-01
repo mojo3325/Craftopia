@@ -1,13 +1,21 @@
 import SwiftUI
 import WebKit
 
-/// WebView for displaying generated HTML
+/// WebView for displaying generated HTML or React applications
 struct HtmlWebView: UIViewRepresentable {
     
-    
-    let html: String
-    @Environment(\.colorScheme) private var colorScheme
+    let reactCode: String
+    private var html: String
+    @AppStorage("isDarkMode") private var darkModeEnabled: Bool = false
     @Binding var shouldReload: Bool
+        
+    // New initializer for React code
+    init(reactCode: String, shouldReload: Binding<Bool>) {
+        let transpiler = ReactTranspiler()
+        self.reactCode = reactCode
+        self.html = transpiler.createHTMLFromReactCode(reactCode)
+        self._shouldReload = shouldReload
+    }
     
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
@@ -35,15 +43,14 @@ struct HtmlWebView: UIViewRepresentable {
         }
         
         // Get current interface style from environment
-        let isDarkMode = colorScheme == .dark
-        let backgroundColor = isDarkMode ? "#2C2C2E" : "#FFFFFF"
-        let textColor = isDarkMode ? "#EBEBF5" : "#000000"
+        let backgroundColor = darkModeEnabled ? "#2C2C2E" : "#FFFFFF"
+        let textColor = darkModeEnabled ? "#EBEBF5" : "#000000"
         
         // Inject CSS to disable zooming and selection, plus dark mode support
         let injectedCSS = """
         <style>
         :root {
-            color-scheme: \(isDarkMode ? "dark" : "light");
+            color-scheme: \(darkModeEnabled ? "dark" : "light");
         }
         
         body {
@@ -112,11 +119,11 @@ struct HtmlWebView: UIViewRepresentable {
     }
 }
 
-/// HTML viewer screen
+/// React app viewer screen
 struct HtmlViewerScreen: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var shouldReload = false
-    let html: String
+    let reactCode: String
     let onBack: () -> Void
     let onNew: () -> Void
     
@@ -127,7 +134,7 @@ struct HtmlViewerScreen: View {
                 .ignoresSafeArea()
     
         VStack(spacing: 0) {
-            HtmlWebView(html: html, shouldReload: $shouldReload)
+            HtmlWebView(reactCode: reactCode, shouldReload: $shouldReload)
                 .background(SoftUI.Colors.containerBackground)
         }
         .toolbar(content: {
@@ -225,18 +232,27 @@ struct HtmlViewerScreen: View {
 }
 
 #Preview {
+    VStack {
         HtmlViewerScreen(
-            html: """
-        <div style="padding: 20px; text-align: center;">
-            <h1 style="color: #1F808D;">Hello World!</h1>
-            <p style="color: #666666;">This is a test HTML application</p>
-            <button style="background: #1F808D; color: white; padding: 10px 20px; border: none; border-radius: 8px;">
-                Click me
-            </button>
-        </div>
-        """,
-            onBack: {},
-            onNew: {}
-        )
+            reactCode: """
+                function App() {
+                    const [count, setCount] = useState(0);
+                    
+                    return (
+                        <div className="App">
+                            <h1>Hello React!</h1>
+                            <p>Count: {count}</p>
+                            <button onClick={() => setCount(count + 1)}>
+                                Increment: {count}
+                            </button>
+                        </div>
+                    );
+                }
+                """, onBack: {}, onNew: {},
+                    
+                
+            )
+            .frame(height: 300)
+        }
         .preferredColorScheme(.light)
 }

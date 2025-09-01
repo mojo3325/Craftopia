@@ -217,7 +217,7 @@ class GenerationService: ObservableObject {
             let reviewerExecutionTime = Date().timeIntervalSince(reviewerStartTime)
             
             let finalResult: String
-            if reviewerResult.status == .completed, let reviewerOutput = reviewerResult.content {
+            if reviewerResult.status == .completed, let reviewerOutput = reviewerResult.content, reviewerOutput.trimmingCharacters(in: .whitespacesAndNewlines).count >= 200 {
                 finalResult = reviewerOutput
                 let reviewerExecution = AgentExecution(
                     agentType: .reviewer,
@@ -233,7 +233,7 @@ class GenerationService: ObservableObject {
                 }
             } else {
                 // If reviewer fails, use coder result as fallback
-                let errorMessage = reviewerResult.error ?? "Reviewer failed"
+                let errorMessage = reviewerResult.error ?? "Reviewer output too short or invalid"
                 print("Reviewer failed: \(errorMessage), using coder output")
                 finalResult = coderOutput
                 let failedReviewerExecution = AgentExecution(

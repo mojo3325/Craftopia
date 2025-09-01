@@ -29,7 +29,7 @@ enum AgentType: String, CaseIterable, Codable {
         case .coder:
             return "qwen-3-coder-480b"
         case .reviewer:
-            return "qwen-3-235b-a22b-thinking-2507"
+            return "gpt-oss-120b"
         }
     }
     

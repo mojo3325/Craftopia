@@ -1,13 +1,7 @@
 import Foundation
 
 /// API client for gpt-oss-120b model with reasoning - specialized for planning and specification
-class PlannerAgentAPIClient: ObservableObject {
-    private let apiKey: String
-    private let baseURL = "https://api.cerebras.ai/v1"
-    
-    init(apiKey: String) {
-        self.apiKey = apiKey
-    }
+class PlannerAgentAPIClient: BaseAPIClient {
     
     /// System prompt for balanced planning with reasoning - focused but complete
     private let systemPrompt = """
@@ -53,19 +47,23 @@ OUTPUT FORMAT (JSON):
   "acceptanceCriteria": [
     "Functionality: All core features work correctly and responsively",
     "Interface: Buttons, inputs, and displays are properly styled and functional",
+    "Readability: All text is clearly visible with proper contrast in both light and dark themes",
     "Usability: Interface is intuitive and provides appropriate feedback",
     "Visual: Design follows brand color scheme exactly with no decorative elements",
+    "Theme Compatibility: Colors work perfectly in both light and dark modes",
     "Responsive: Works well on mobile and desktop devices"
   ],
   "testChecklist": [
     "Test 1: Verify all interactive elements respond correctly",
     "Test 2: Confirm calculations/logic produce expected results",
     "Test 3: Check visual feedback and state changes work properly",
-    "Test 4: Validate responsive design on different screen sizes",
-    "Test 5: Test error handling and edge cases"
+    "Test 4: Validate text readability and contrast in both light and dark themes",
+    "Test 5: Verify button text visibility",
+    "Test 6: Validate responsive design on different screen sizes",
+    "Test 7: Test error handling and edge cases"
   ],
-  "architecture": "Single-page application with semantic HTML structure, CSS custom properties for theming, and vanilla JavaScript for interactivity. Organized with clear separation of concerns: structure (HTML), presentation (CSS), and behavior (JS).",
-  "userExperience": "Clean, modern interface with intuitive controls and clear visual hierarchy. Consistent with brand aesthetics using defined color variables. Responsive design that works well on mobile. Smooth interactions with appropriate feedback. Accessible design with proper contrast and touch targets."
+  "architecture": "Modern React application with functional components and hooks. Uses JSX syntax, ES6+ features, and component-based architecture. State managed through React hooks (useState, useEffect). Clean separation of concerns with reusable components and responsive design patterns.",
+  "userExperience": "Clean, modern React interface with intuitive controls and clear visual hierarchy. Component-based architecture ensures maintainable and scalable code. Consistent with brand aesthetics using CSS-in-JS or className approaches. Responsive design optimized for mobile-first experience. Smooth interactions with React state management and proper hook usage. Accessible design with proper contrast and touch targets."
 }
 
 EXAMPLES OF GOOD BALANCED SCOPE:
@@ -85,34 +83,6 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
     func generatePlan(context: AgentContext) async throws -> AgentExecutionResult {
         let startTime = Date()
         
-        // Validate API key
-        if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let error = PlannerAgentError.invalidAPIKey.localizedDescription
-            return AgentExecutionResult(
-                agentType: .planner,
-                status: .failed,
-                error: error,
-                executionTimeSeconds: Date().timeIntervalSince(startTime)
-            )
-        }
-        
-        guard let url = URL(string: "\(baseURL)/chat/completions") else {
-            let error = PlannerAgentError.invalidURL.localizedDescription
-            return AgentExecutionResult(
-                agentType: .planner,
-                status: .failed,
-                error: error,
-                executionTimeSeconds: Date().timeIntervalSince(startTime)
-            )
-        }
-        
-        // Prepare request
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.timeoutInterval = 120
         // Build planning prompt
         let userPrompt = buildPlanningPrompt(from: context)
         
@@ -123,60 +93,43 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
             ],
             "model": "gpt-oss-120b",
             "temperature": 0.3,
-            "max_tokens": 12000,
+            "max_completion_tokens": 12000,
             "top_p": 0.85,
             "reasoning_effort": "medium"
         ]
         
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                let error = PlannerAgentError.invalidResponse.localizedDescription
-                return AgentExecutionResult(
-                    agentType: .planner,
-                    status: .failed,
-                    error: error,
-                    executionTimeSeconds: Date().timeIntervalSince(startTime)
-                )
-            }
-            
-            if httpResponse.statusCode != 200 {
-                let errorData = String(data: data, encoding: .utf8) ?? "Unknown error"
-                print("[PlannerAgent] HTTP Error \(httpResponse.statusCode): \(errorData)")
-                
-                let error = PlannerAgentError.httpError(statusCode: httpResponse.statusCode, message: errorData).localizedDescription
-                return AgentExecutionResult(
-                    agentType: .planner,
-                    status: .failed,
-                    error: error,
-                    executionTimeSeconds: Date().timeIntervalSince(startTime)
-                )
-            }
-            
-            let apiResponse = try JSONDecoder().decode(CerebrasAPIResponse.self, from: data)
+            let apiResponse = try await makeAPIRequest(
+                requestBody: requestBody,
+                responseType: CerebrasAPIResponse.self,
+                agentName: "PlannerAgent"
+            )
             
             guard let firstChoice = apiResponse.choices.first else {
-                let error = PlannerAgentError.noChoices.localizedDescription
                 return AgentExecutionResult(
                     agentType: .planner,
                     status: .failed,
-                    error: error,
+                    error: PlannerAgentError.noChoices.localizedDescription,
                     executionTimeSeconds: Date().timeIntervalSince(startTime)
                 )
             }
             
-            let rawContent = firstChoice.message.content
+            guard let rawContent = extractContent(from: firstChoice, agentName: "PlannerAgent") else {
+                return AgentExecutionResult(
+                    agentType: .planner,
+                    status: .failed,
+                    error: PlannerAgentError.noValidPlan.localizedDescription,
+                    executionTimeSeconds: Date().timeIntervalSince(startTime)
+                )
+            }
+            
             let plannerOutput = extractAndValidatePlannerOutput(rawContent)
             
             guard !plannerOutput.isEmpty else {
-                let error = PlannerAgentError.noValidPlan.localizedDescription
                 return AgentExecutionResult(
                     agentType: .planner,
                     status: .failed,
-                    error: error,
+                    error: PlannerAgentError.noValidPlan.localizedDescription,
                     executionTimeSeconds: Date().timeIntervalSince(startTime)
                 )
             }
@@ -188,7 +141,18 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
                 executionTimeSeconds: Date().timeIntervalSince(startTime)
             )
             
+        } catch let error as APIError {
+            return AgentExecutionResult(
+                agentType: .planner,
+                status: .failed,
+                error: error.localizedDescription,
+                executionTimeSeconds: Date().timeIntervalSince(startTime)
+            )
         } catch {
+            print("[PlannerAgent] CATCH ERROR: \(error)")
+            if let decodingError = error as? DecodingError {
+                print("[PlannerAgent] Decoding error details: \(decodingError)")
+            }
             return AgentExecutionResult(
                 agentType: .planner,
                 status: .failed,
@@ -209,14 +173,15 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
         prompt += """
         
         
-        Please analyze this request and create a MINIMAL development plan. Focus on:
+        Please analyze this request and create a MINIMAL React development plan. Focus on:
         - ONLY the essential features needed for the core use case
-        - Simple, straightforward user interactions
-        - Clean, SwiftUI-inspired minimalist design
+        - Simple, straightforward user interactions using React hooks
+        - Clean, SwiftUI-inspired minimalist design with React components
         - Working functionality over impressive features
         - Mobile-first responsive layout
+        - Modern React patterns (functional components, hooks, controlled inputs)
         
-        Avoid feature creep and unnecessary complexity. Create a focused, beautiful, working application.
+        Avoid feature creep and unnecessary complexity. Create a focused, beautiful, working React application.
         Return the plan as valid JSON following the specified format.
         """
         
@@ -292,30 +257,15 @@ CRITICAL: Return ONLY valid JSON. No explanations, no markdown, no additional te
 
 /// Errors specific to planner agent
 enum PlannerAgentError: Error, LocalizedError {
-    case invalidURL
-    case invalidResponse
-    case httpError(statusCode: Int, message: String)
     case noChoices
     case noValidPlan
-    case invalidAPIKey
-    case jsonParsingError
     
     var errorDescription: String? {
         switch self {
-        case .invalidURL:
-            return "Invalid API URL"
-        case .invalidResponse:
-            return "Invalid response from API"
-        case .httpError(let statusCode, let message):
-            return "HTTP error \(statusCode): \(message)"
         case .noChoices:
             return "No response choices received"
         case .noValidPlan:
             return "No valid plan generated"
-        case .invalidAPIKey:
-            return "Invalid or missing API key"
-        case .jsonParsingError:
-            return "Failed to parse JSON response"
         }
     }
 }
