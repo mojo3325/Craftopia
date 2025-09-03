@@ -228,11 +228,12 @@ CRITICAL: Return ONLY the design specification text. No JSON, no markdown, no ad
            - Number/Calculator buttons (for keypad interfaces) - CRITICAL for readability
         5. **READABILITY REQUIREMENTS**: Explicitly specify text colors that contrast well with backgrounds
         6. **THEME COMPATIBILITY**: Ensure all color combinations work in both light and dark themes
-        7. **CONTRAST VALIDATION**: Verify minimum 4.5:1 contrast ratio for all text elements
-        8. **Shadow & Elevation**: Specify shadow values, layering, and depth treatments
-        9. **Interaction Design**: Define hover states, focus treatments, and animation specifications
-        10. **Spacing & Layout**: Provide padding, margins, and responsive behavior guidelines
-        11. **Typography**: Specify font weights, sizes, and text hierarchy
+        7. MAKE SURE that the application colors match the colorscheme.
+        8. **CONTRAST VALIDATION**: Verify minimum 4.5:1 contrast ratio for all text elements
+        9. **Shadow & Elevation**: Specify shadow values, layering, and depth treatments
+        10. **Interaction Design**: Define hover states, focus treatments, and animation specifications
+        11. **Spacing & Layout**: Provide padding, margins, and responsive behavior guidelines
+        12. **Typography**: Specify font weights, sizes, and text hierarchy
         
         Be specific with measurements, colors, and visual effects. Reference the Craftopia design system values provided in the system prompt.
         The CoderAgent will implement exactly what you specify, so be precise and comprehensive.

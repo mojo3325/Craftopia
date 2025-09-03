@@ -196,8 +196,9 @@ class ThinkingAgentAPIClient: BaseAPIClient {
         4. Verify the design matches SwiftUI minimalist aesthetic
         5. Fix any broken React functionality (hooks, state management, event handlers)
         6. **THEME CONSISTENCY**: Ensure colors are appropriate for each theme (dark text on light, light text on dark)
-        7. Keep it simple - don't add complexity or "impressive" features
-        8. Return the final, working React JSX component
+        7. MAKE SURE that the application colors match the colorscheme.
+        8. Keep it simple - don't add complexity or "impressive" features
+        9. Return the final, working React JSX component
 
         Focus on making core React functionality work perfectly while keeping it beautifully simple and ensuring excellent readability.
         """

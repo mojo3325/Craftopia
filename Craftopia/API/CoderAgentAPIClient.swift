@@ -173,7 +173,7 @@ const isMobile = window.innerWidth <= 768;
 // Use in conditional styling or useEffect with window.addEventListener
 ```
 
-**STATIC THEME COLORS** (Use these exact colors, no theme switching):
+**STATIC THEME COLORS** (Use these exact colors):
 - Light theme colors: #F5F6F8 (background), #FFFFFF (surface), #131B22 (heading), #4B5669 (main text), #E3E6EB (border)
 - Dark theme colors: #07090D (background), #15171F (surface), #FFFFFF (heading), #EBEBF5 (main text), #3A3A3C (border)
 
