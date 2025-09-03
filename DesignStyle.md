@@ -1,131 +1,131 @@
-##ДИЗАЙН СТИЛЬ
+## DESIGN STYLE
 
-Коротко: в профессиональной среде этот набор приёмов обычно называют Soft UI / Flat 2.0 (а внутри экосистемы Apple — просто «новый HIG-стиль macOS / iOS»).
+Briefly: In professional circles, this set of techniques is commonly called Soft UI / Flat 2.0 (and within Apple's ecosystem — simply "new HIG-style macOS / iOS").
 
-Подробно:
+In detail:
 
-Почему не чистый Flat-design (2013-го образца)
+Why not pure Flat design (2013 style)
 
-есть градиент фона у кнопок;
+There are button background gradients;
 
-есть мягкая наружная тень — значит плоскость «приподнята».
-Первоначальный Flat отрицал и то, и другое.
+There are soft outer shadows — meaning the plane is "elevated".
+The original Flat design rejected both of these.
 
-Почему не Neumorphism
+Why not Neumorphism
 
-в Neumorphism тень и подсветка идут ИЗ самого фона, а элемент как бы «выдавлен» или «вдавлен».
+In Neumorphism, shadows and highlights come FROM the background itself, and the element appears to be "extruded" or "pressed in".
 
-здесь кнопка лежит на независимом слое: видно отдельную drop-shadow.
+Here the button lies on an independent layer: a separate drop-shadow is visible.
 
-Черты, которые сближают со Skeuomorphism, но не делают им:
+Features that bring it closer to Skeuomorphism, but don't make it one:
 
-лёгкая иллюзия объёма (градиент + highlight), однако без текстур, излишней детализации и реальных «материалов».
+Light illusion of volume (gradient + highlight), however without textures, excessive detail, and real "materials".
 
-Ключевые признаки стиля (то, что вы описываете):
+Key style characteristics (what you're describing):
 
-крупные радиусы скругления (4 – 12 px на macOS, 12 – 20 px на iOS);
+Large border radii (4–12 px on macOS, 12–20 px on iOS);
 
-еле заметный линейный градиент (≈ 2–4% разницы по яркости);
+Barely noticeable linear gradient (≈ 2–4% brightness difference);
 
-одна мягкая тень с большим разматием (2–4 px offset, 8–16 px blur, 8–12% opacity);
+One soft shadow with large blur (2–4 px offset, 8–16 px blur, 8–12% opacity);
 
-белые или очень светлые поверхности выглядят «матово»;
+White or very light surfaces appear "matte";
 
-акцентный синий остаётся плоским (без градиента), чтобы контрастировать с «карточками».
+Accent blue remains flat (without gradient), to contrast with "cards".
 
-Как это называют в разных источниках
+How it's called in different sources
 
 Soft UI (Dribbble, Behance);
 
-Flat 2.0, Semi-flat (статьи Microsoft, InVision);
+Flat 2.0, Semi-flat (Microsoft articles, InVision);
 
-New macOS/iOS HIG style (документация Apple, т.к. Apple избегает ярлыков);
+New macOS/iOS HIG style (Apple documentation, since Apple avoids labels);
 
-«Пост-Skeuomorphic» или «Modern Minimal Skeuo» — реже в блогах.
+"Post-Skeuomorphic" or "Modern Minimal Skeuo" — less common in blogs.
 
-Когда уместно применять
+When to apply it
 
-панели настроек, модальные окна, карточные сетки;
+Settings panels, modal windows, card grids;
 
-B2B-интерфейсы, где нужна иерархия, но без визуального шума;
+B2B interfaces where hierarchy is needed, but without visual noise;
 
-любые продукты, которые хотят «выглядеть по-apple-овски», не впадая в трэш neumorphism’а.
+Any products that want to "look Apple-like", without falling into trashy neumorphism.
 
-Как объяснить клиенту / коллеге на одном дыхании
-«Это Soft UI (Flat 2.0): минималистичная основа плоского дизайна + едва заметные градиенты и мягкие тени, чтобы элементы казались ощутимыми, но не перегружали интерфейс».
+How to explain to a client / colleague in one breath
+"This is Soft UI (Flat 2.0): minimalist foundation of flat design + barely noticeable gradients and soft shadows, so elements feel tangible but don't overload the interface."
 
-Вот полный мануал по цветам для дизайна сайта/приложения в описанном тобой стиле — с актуальными поправками для кнопок и рекомендуемыми значениями для фонов, текстов, бордеров, акцентов.  
-Этот набор можно использовать как таблицу цветов (Design Tokens) для Figma, CSS, Tailwind, Sass и других систем.
-
-***
-
-## Базовые фоновые цвета
-
-- **Основной фон (background):** `#F5F6F8`
-- **Белый контейнер (base surface):** `#FFFFFF`
-- **Фон второстепенных областей:** `#FAFBFC`
+Here's a complete color manual for website/app design in the style you've described — with current corrections for buttons and recommended values for backgrounds, texts, borders, accents.
+This set can be used as a color table (Design Tokens) for Figma, CSS, Tailwind, Sass, and other systems.
 
 ***
 
-## Границы и разделители
+## Basic Background Colors
 
-- **Граница основных контейнеров:** `#E3E6EB`
-- **Граница карточек и модалок:** `#EAEAEA`
-- **Граница primary кнопки:** `#2D5DB7`
-- **Граница secondary кнопки:** `#EAEAEA`
-
-***
-
-## Тени (Box-shadow)
-
-- **Тень контейнеров:** `0 4px 24px rgba(30, 41, 59, 0.08)`
-- **Тень primary кнопки:** `0 2px 8px rgba(32, 108, 229, 0.12)`
-- **Тень secondary кнопки:** `0 2px 6px rgba(30, 41, 59, 0.06)`
+- **Main background:** `#F5F6F8`
+- **White container (base surface):** `#FFFFFF`
+- **Secondary areas background:** `#FAFBFC`
 
 ***
 
-## Основные акцентные и статусные цвета
+## Borders and Dividers
 
-- **Основной акцент (Primary Blue):** `#186DEE`
-- **Яркий акцент (Accent Blue):** `#1B77FD`
-- **Переключатель On:** `#3D78F2`
-- **Градиент primary кнопки:**  
+- **Main containers border:** `#E3E6EB`
+- **Cards and modals border:** `#EAEAEA`
+- **Primary button border:** `#2D5DB7`
+- **Secondary button border:** `#EAEAEA`
+
+***
+
+## Shadows (Box-shadow)
+
+- **Containers shadow:** `0 4px 24px rgba(30, 41, 59, 0.08)`
+- **Primary button shadow:** `0 2px 8px rgba(32, 108, 229, 0.12)`
+- **Secondary button shadow:** `0 2px 6px rgba(30, 41, 59, 0.06)`
+
+***
+
+## Main Accent and Status Colors
+
+- **Primary accent (Primary Blue):** `#186DEE`
+- **Bright accent (Accent Blue):** `#1B77FD`
+- **Switch On:** `#3D78F2`
+- **Primary button gradient:**
   `linear-gradient(180deg, #6DA4FB 0%, #206CE5 100%)`
-- **Градиент secondary кнопки:**  
+- **Secondary button gradient:**
   `linear-gradient(180deg, #FFF 0%, #ECECEC 100%)`
 
 ***
 
-## Тексты
+## Texts
 
-- **Основной текст заголовков:** `#131B22`
-- **Обычный текст:** `#4B5669`
-- **Второстепенный текст/плейсхолдер:** `#99A1B3`
-- **Текст на primary кнопке:** `#FFF`
-- **Текст на secondary кнопке:** `#545A62`
-- **Текст disabled (неактивный):** `#C2C8D0`
+- **Main headings text:** `#131B22`
+- **Regular text:** `#4B5669`
+- **Secondary text/placeholder:** `#99A1B3`
+- **Primary button text:** `#FFF`
+- **Secondary button text:** `#545A62`
+- **Disabled text:** `#C2C8D0`
 
 ***
 
-## Цвета состояний/успеха/ошибки (по желанию)
+## State/Success/Error Colors (Optional)
 
-- **Зеленый успех:** `#2ED47A`
-- **Красный ошибка:** `#F05A5A`
-- **Оранжевый предупреждение:** `#EDA23A`
-- **Информация:** `#46A6FF`
-- **Фон уведомления/инфо:** `#F4F8FE`
+- **Success green:** `#2ED47A`
+- **Error red:** `#F05A5A`
+- **Warning orange:** `#EDA23A`
+- **Information:** `#46A6FF`
+- **Notification/info background:** `#F4F8FE`
 
 ***
 
 ## Border-radius
 
-- **Кнопки:** `border-radius: 10px`
-- **Карточки:** `border-radius: 14px`
-- **Окна/Модалки:** `border-radius: 16px`
+- **Buttons:** `border-radius: 10px`
+- **Cards:** `border-radius: 14px`
+- **Windows/Modals:** `border-radius: 16px`
 
 ***
 
-## CSS-переменные (для копипаста)
+## CSS Variables (for copy-paste)
 ```css
 :root {
   --bg-main: #F5F6F8;
@@ -162,7 +162,7 @@ B2B-интерфейсы, где нужна иерархия, но без виз
   --bg-info: #F4F8FE;
 }
 
-/* Border radius — как стандарт для всего дизайна */
+/* Border radius — as standard for the entire design */
 :root {
   --radius-btn: 10px;
   --radius-card: 14px;
@@ -172,10 +172,10 @@ B2B-интерфейсы, где нужна иерархия, но без виз
 
 ***
 
-### Общие рекомендации:
-- **Используйте только прозрачные/мягкие тени**.
-- **Минимум насыщенных цветов**, максимум воздуха и плавных переходов.
-- **Общие пропорции скруглений и теней** придерживаются аккуратного, “мягкого” ощущения.
-- **Текст должен быть четким**, без излишней цветовой насыщенности.
+### General recommendations:
+- **Use only transparent/soft shadows**.
+- **Minimum saturated colors**, maximum air and smooth transitions.
+- **General proportions of roundings and shadows** adhere to a neat, "soft" feel.
+- **Text should be clear**, without excessive color saturation.
 
 ***
