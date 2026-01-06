@@ -120,6 +120,8 @@ cd craftopia
 cp Config-Template.xcconfig Config.xcconfig
 # Edit Config.xcconfig with your API keys
 ```
+`Config.xcconfig` is ignored by git and must never be committed.  
+Alternatively, you can set the API key inside the app (Settings) and it will be stored in Keychain.
 
 3. Open in Xcode:
 ```bash
@@ -129,6 +131,12 @@ open Craftopia.xcodeproj
 4. Build and run on simulator or device
 
 ### **API Configuration**
+You can configure the Cerebras API key in two ways:
+
+**Option A (recommended): in-app Settings (Keychain)**
+- Open Settings → “Cerebras API Key” → paste your key → Save
+
+**Option B: local `Config.xcconfig` (gitignored)**
 Create a `Config.xcconfig` file with your API credentials:
 ```
 // Cerebras AI API Configuration

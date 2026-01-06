@@ -95,11 +95,15 @@ iOSInjectionProject/
 
 # SECURITY: API Keys and Configuration Files
 # These files contain sensitive API keys and should NEVER be committed to git
+.env
+.env.*
+!.env.example
 Config.xcconfig
 Config-Production.xcconfig
 Config-Development.xcconfig
 Config-Debug.xcconfig
 Config-Release.xcconfig
+*.pbxproj.backup
 
 # macOS
 .DS_Store

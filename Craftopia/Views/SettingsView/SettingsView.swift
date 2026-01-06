@@ -5,6 +5,8 @@ struct SettingsView: View {
     @AppStorage("useAgentSwarm") private var useAgentSwarm: Bool = true
     @State private var contentHeight: CGFloat = 0
     @State private var showingLogs = false
+    @State private var showingAPIKeyEditor = false
+    @State private var isAPIConfigured = SecureAPIConfig.isAPIKeyConfigured
     
     let generationService: GenerationService
     
@@ -73,6 +75,26 @@ struct SettingsView: View {
                                         .foregroundColor(SoftUI.Colors.textMain)
                                 }
                                 .tint(SoftUI.Colors.switchOn)
+                                .padding(12)
+
+                                Divider().overlay(SoftUI.Colors.border)
+
+                                Button(action: { showingAPIKeyEditor = true }) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Cerebras API Key")
+                                                .font(.subheadline)
+                                                .foregroundColor(SoftUI.Colors.textMain)
+                                            Text(isAPIConfigured ? "Configured (Keychain)" : "Not configured")
+                                                .font(.caption)
+                                                .foregroundColor(SoftUI.Colors.textMuted)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption)
+                                            .foregroundColor(SoftUI.Colors.textMuted)
+                                    }
+                                }
                                 .padding(12)
 
                                 Divider().overlay(SoftUI.Colors.border)
@@ -149,9 +171,80 @@ struct SettingsView: View {
         .sheet(isPresented: $showingLogs) {
             LogsView(generationService: generationService)
         }
+        .sheet(isPresented: $showingAPIKeyEditor, onDismiss: refreshAPIConfigState) {
+            APIKeyEditorView()
+        }
+        .onAppear {
+            refreshAPIConfigState()
+        }
+    }
+
+    private func refreshAPIConfigState() {
+        isAPIConfigured = SecureAPIConfig.isAPIKeyConfigured
     }
 }
 
+private struct APIKeyEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var apiKey = ""
+    @State private var message: String? = nil
+    @State private var isConfigured = SecureAPIConfig.isAPIKeyConfigured
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Status") {
+                    HStack {
+                        Text("Cerebras")
+                        Spacer()
+                        Text(isConfigured ? "Configured" : "Not configured")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("Key") {
+                    SecureField("csk-…", text: $apiKey)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .privacySensitive()
+
+                    if let message {
+                        Text(message)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section {
+                    Button("Save to Keychain") {
+                        let success = SecureAPIConfig.setCerebrasAPIKey(apiKey)
+                        isConfigured = SecureAPIConfig.isAPIKeyConfigured
+                        message = success ? "Saved." : "Failed to save."
+                    }
+
+                    Button("Clear Keychain Key", role: .destructive) {
+                        let success = SecureAPIConfig.setCerebrasAPIKey("")
+                        apiKey = ""
+                        isConfigured = SecureAPIConfig.isAPIKeyConfigured
+                        message = success ? "Cleared." : "Failed to clear."
+                    }
+
+                    Button("Import From Config.xcconfig") {
+                        let success = SecureAPIConfig.forceUpdateFromBuildConfig()
+                        isConfigured = SecureAPIConfig.isAPIKeyConfigured
+                        message = success ? "Imported." : "Nothing to import."
+                    }
+                }
+            }
+            .navigationTitle("API Key")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
 #Preview {
     @Previewable @State var showingSettings = true
     

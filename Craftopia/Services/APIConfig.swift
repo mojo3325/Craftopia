@@ -14,22 +14,24 @@ struct SecureAPIConfig {
               key != "$(CEREBRAS_API_KEY)" else {
             return nil
         }
-        return key
+        return key.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    // MARK: - Keychain Keys
+    
+    private static var keychainCerebrasKey: String? {
+        KeychainHelper.retrieveAPIKey(for: KeychainHelper.cerebrasAccount)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     // MARK: - API Key Access
     
-    /// Get Cerebras API key directly from build configuration
-    /// Always reads from Config.xcconfig - no caching
+    /// Get Cerebras API key from Keychain, falling back to build configuration.
     static var cerebrasAPIKey: String? {
-        guard let buildKey = buildTimeCerebrasKey else {
-            return nil
+        if let keychainKey = keychainCerebrasKey, !keychainKey.isEmpty {
+            return keychainKey
         }
-        
-        let trimmedKey = buildKey.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        
-        return trimmedKey
+        return buildTimeCerebrasKey
     }
     
     /// Check if API key is configured and valid
@@ -46,9 +48,9 @@ struct SecureAPIConfig {
             return """
             Cerebras API key is not configured. 
             Please:
-            1. Create a Config.xcconfig file (use Config-Template.xcconfig as reference)
-            2. Add your API key: CEREBRAS_API_KEY = csk-your-key-here
-            3. Or set it programmatically using SecureAPIConfig.setCerebrasAPIKey()
+            1. Open Settings and paste your API key (stored securely in Keychain)
+            2. Or create a local Config.xcconfig file (use Config-Template.xcconfig as reference)
+               and set: CEREBRAS_API_KEY = csk-your-key-here
             """
         }
         return ""
@@ -56,23 +58,33 @@ struct SecureAPIConfig {
     
     // MARK: - Runtime Configuration
     
-    /// This function is no longer needed since we always read directly from config
-    /// Kept for backward compatibility but does nothing
+    /// Imports the build-time key into Keychain (one-time migration).
+    /// Useful if you previously used Config.xcconfig and want to stop keeping secrets in files.
     static func forceUpdateFromBuildConfig() -> Bool {
-        return true
+        if hasKeychainAPIKey {
+            return true
+        }
+        guard let buildKey = buildTimeCerebrasKey, !buildKey.isEmpty else {
+            return false
+        }
+        return KeychainHelper.storeAPIKey(buildKey, for: KeychainHelper.cerebrasAccount)
     }
     
-    /// Runtime API key setting is not supported - use Config.xcconfig instead
-    /// - Parameter key: The API key (ignored)
-    /// - Returns: Always false since we only use build config
+    /// Store API key securely in Keychain.
+    /// - Parameter key: The API key value
+    /// - Returns: True if successfully stored (or cleared when empty), false otherwise
     @discardableResult
     static func setCerebrasAPIKey(_ key: String) -> Bool {
-        return false
+        let trimmedKey = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedKey.isEmpty {
+            return KeychainHelper.deleteAPIKey(for: KeychainHelper.cerebrasAccount)
+        }
+        return KeychainHelper.storeAPIKey(trimmedKey, for: KeychainHelper.cerebrasAccount)
     }
     
-    /// Always returns false since we don't use Keychain
+    /// True if an API key exists in Keychain.
     static var hasKeychainAPIKey: Bool {
-        return false
+        KeychainHelper.apiKeyExists(for: KeychainHelper.cerebrasAccount)
     }
 }
 
