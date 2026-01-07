@@ -107,6 +107,7 @@ Config-Release.xcconfig
 Screenshots/
 Screenshots18/
 ScreenshotsBurst/
+ScreenshotsMock/
 
 # macOS
 .DS_Store
