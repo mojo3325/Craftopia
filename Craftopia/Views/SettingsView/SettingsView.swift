@@ -206,7 +206,9 @@ private struct APIKeyEditorView: View {
                     SecureField("csk-…", text: $apiKey)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+#if !DEBUG
                         .privacySensitive()
+#endif
 
                     if let message {
                         Text(message)

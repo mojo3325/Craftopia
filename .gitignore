@@ -104,6 +104,9 @@ Config-Development.xcconfig
 Config-Debug.xcconfig
 Config-Release.xcconfig
 *.pbxproj.backup
+Screenshots/
+Screenshots18/
+ScreenshotsBurst/
 
 # macOS
 .DS_Store
