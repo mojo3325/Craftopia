@@ -14,7 +14,7 @@
 /* Begin PBXFileReference section */
 		2C18B9A72E5F137400631E94 /* matrix_rain.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = matrix_rain.mp4; sourceTree = "<group>"; };
 		2C5776962E565B4800DE9FBA /* DesignStyle.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DesignStyle.md; sourceTree = "<group>"; };
-		2C81C4B92E6789AB00F12345 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		2C81C4B92E6789AB00F12345 /* Config-Template.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Config-Template.xcconfig"; sourceTree = "<group>"; };
 		2CA2EF932E3E835200411DB0 /* Craftopia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Craftopia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -40,7 +40,7 @@
 		2C18BC4C2E5F45D900631E94 /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
-				2C81C4B92E6789AB00F12345 /* Config.xcconfig */,
+				2C81C4B92E6789AB00F12345 /* Config-Template.xcconfig */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -148,7 +148,7 @@
 /* Begin XCBuildConfiguration section */
 		2CA2EF9C2E3E835300411DB0 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2C81C4B92E6789AB00F12345 /* Config.xcconfig */;
+			baseConfigurationReference = 2C81C4B92E6789AB00F12345 /* Config-Template.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -213,7 +213,7 @@
 		};
 		2CA2EF9D2E3E835300411DB0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2C81C4B92E6789AB00F12345 /* Config.xcconfig */;
+			baseConfigurationReference = 2C81C4B92E6789AB00F12345 /* Config-Template.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
