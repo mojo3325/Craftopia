@@ -1,40 +1,76 @@
 import SwiftUI
 
-/// Main screen for generating HTML applications with Agent Swarm support
+/// Main screen (design mock).
+/// Intentionally does NOT depend on API keys, networking, or generation state.
 struct GenerateScreen: View {
-    // MARK: - ViewModel
-    @StateObject private var viewModel: GenerateScreenViewModel
+    @State private var prompt: String
+
+    init() {
+        _prompt = State(initialValue: "Create a modern dashboard with cards and charts")
+    }
     
-    // MARK: - Initializers
-    init(viewModel: GenerateScreenViewModel? = nil) {
-        if let viewModel = viewModel {
-            _viewModel = StateObject(wrappedValue: viewModel)
-        } else {
-            _viewModel = StateObject(wrappedValue: GenerateScreenViewModel())
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                SoftUI.Colors.backgroundMain
+                    .ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 16) {
+                        Text("Create interactive applications from text descriptions")
+                            .font(.body)
+                            .foregroundColor(SoftUI.Colors.textMain)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                            .padding(.top, 50)
+
+                        PromptInputCard {
+                            PromptTextInput(prompt: $prompt, isGenerating: false)
+
+                            GenerateButton(
+                                isActive: true,
+                                isGenerating: false,
+                                onGenerate: {}
+                            )
+
+                            PromptExamplesSection(prompt: $prompt)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .scrollIndicators(.hidden)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Text("Craftopia")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(SoftUI.Colors.textHeading)
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {}) {
+                            ZStack {
+                                Circle()
+                                    .fill(SoftUI.Colors.containerBackground)
+                                    .frame(width: 32, height: 32)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(SoftUI.Colors.border, lineWidth: 1)
+                                    )
+
+                                Image(systemName: "gear")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(SoftUI.Colors.textMain)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
     }
-    
-    // MARK: - Body
-    var body: some View {
-            
-        GenerationContentView(
-            viewModel: viewModel,
-            prompt: $viewModel.prompt,
-            onGenerate: viewModel.handleGenerate,
-            onReset: viewModel.handleReset
-        )
-        
-    }
-    
-
 }
 
-#Preview("Idle") {
+#Preview {
     GenerateScreen()
-}
-
-#Preview("Generating") {
-    let viewModel = GenerateScreenViewModel()
-    viewModel.store.setGenerating(prompt: "Create a modern dashboard", mode: .single)
-    return GenerateScreen(viewModel: viewModel)
 }
